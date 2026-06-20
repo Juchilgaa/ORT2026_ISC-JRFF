@@ -1,0 +1,7 @@
+aws_region   = "us-east-1"
+project_name = "obligatorio-isc"
+environment  = "academy"
+
+db_name     = "obligatorio"
+db_username = "admin_obligatorio"
+db_password = "CAMBIAR_EN_TERRAFORM_TFVARS_NO_SUBIR"
