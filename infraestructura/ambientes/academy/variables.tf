@@ -45,3 +45,33 @@ variable "private_db_subnet_cidrs" {
   type        = list(string)
   default     = ["10.0.21.0/24", "10.0.22.0/24"]
 }
+
+variable "db_name" {
+  description = "Nombre de la base de datos inicial."
+  type        = string
+  default     = "obligatorio"
+}
+
+variable "db_username" {
+  description = "Usuario administrador de la base de datos."
+  type        = string
+  default     = "adminisc"
+}
+
+variable "db_password" {
+  description = "Password administrador de la base de datos."
+  type        = string
+  sensitive   = true
+}
+
+variable "db_instance_class" {
+  description = "Tipo de instancia RDS."
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "db_multi_az" {
+  description = "Indica si RDS se despliega en modo Multi-AZ."
+  type        = bool
+  default     = false
+}
