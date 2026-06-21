@@ -37,3 +37,18 @@ output "db_security_group_id" {
   description = "Security Group asociado a RDS."
   value       = module.rds.db_security_group_id
 }
+
+output "eks_cluster_name" {
+  description = "Nombre del cluster EKS."
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "Endpoint del cluster EKS."
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_node_group_name" {
+  description = "Nombre del node group de EKS."
+  value       = module.eks.node_group_name
+}
