@@ -105,3 +105,9 @@ variable "eks_node_max_size" {
   type        = number
   default     = 3
 }
+
+variable "log_retention_days" {
+  description = "Cantidad de días de retención de logs en CloudWatch."
+  type        = number
+  default     = 7
+}
