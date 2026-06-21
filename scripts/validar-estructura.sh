@@ -25,6 +25,42 @@ required_files=(
   "README.md"
   ".gitignore"
   "terraform.tfvars.example"
+
+  "aplicacion/nodejs-app/package.json"
+  "aplicacion/nodejs-app/package-lock.json"
+  "aplicacion/nodejs-app/server.js"
+  "aplicacion/nodejs-app/Dockerfile"
+  "aplicacion/nodejs-app/.dockerignore"
+  "aplicacion/nodejs-app/.env.example"
+  "aplicacion/nodejs-app/db.sql"
+
+  "infraestructura/ambientes/academy/main.tf"
+  "infraestructura/ambientes/academy/variables.tf"
+  "infraestructura/ambientes/academy/outputs.tf"
+  "infraestructura/ambientes/academy/providers.tf"
+  "infraestructura/ambientes/academy/versions.tf"
+
+  "infraestructura/modulos/red/main.tf"
+  "infraestructura/modulos/red/variables.tf"
+  "infraestructura/modulos/red/outputs.tf"
+  "infraestructura/modulos/rds/main.tf"
+  "infraestructura/modulos/rds/variables.tf"
+  "infraestructura/modulos/rds/outputs.tf"
+  "infraestructura/modulos/eks/main.tf"
+  "infraestructura/modulos/eks/variables.tf"
+  "infraestructura/modulos/eks/outputs.tf"
+  "infraestructura/modulos/monitoreo/main.tf"
+  "infraestructura/modulos/monitoreo/variables.tf"
+  "infraestructura/modulos/monitoreo/outputs.tf"
+
+  "kubernetes/namespace/namespace.yaml"
+  "kubernetes/config/configmap.yaml"
+  "kubernetes/config/secret.example.yaml"
+  "kubernetes/app/deployment.yaml"
+  "kubernetes/app/service.yaml"
+  "kubernetes/app/ingress.yaml"
+  "kubernetes/app/hpa.yaml"
+
   "docs/01-alcance.md"
   "docs/02-arquitectura.md"
   "docs/03-red-seguridad.md"
@@ -51,9 +87,9 @@ for file in "${required_files[@]}"; do
   fi
 done
 
-if git ls-files | grep -E '(^|/)\.env$|(^|/)terraform\.tfvars$|\.pem$|\.key$|(^|/)kubeconfig$|\.kubeconfig$' >/dev/null; then
+if git ls-files | grep -E '(^|/)\.env$|(^|/)terraform\.tfvars$|\.pem$|\.key$|(^|/)kubeconfig$|\.kubeconfig$|(^|/)secret\.yaml$' >/dev/null; then
   echo "ERROR: hay archivos sensibles trackeados"
-  git ls-files | grep -E '(^|/)\.env$|(^|/)terraform\.tfvars$|\.pem$|\.key$|(^|/)kubeconfig$|\.kubeconfig$'
+  git ls-files | grep -E '(^|/)\.env$|(^|/)terraform\.tfvars$|\.pem$|\.key$|(^|/)kubeconfig$|\.kubeconfig$|(^|/)secret\.yaml$'
   exit 1
 fi
 
