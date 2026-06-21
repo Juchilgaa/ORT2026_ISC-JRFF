@@ -52,6 +52,7 @@ La documentación técnica se encuentra en `/docs`:
 - `09-runbook.md`
 - `10-uso-ia.md`
 - `11-checklist-entrega.md`
+- `12-diagrama-arquitectura.md`
 - `decisiones/README.md`
 
 ## Validaciones principales

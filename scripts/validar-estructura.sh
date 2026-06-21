@@ -70,6 +70,9 @@ required_files=(
   "docs/07-monitoreo-logs.md"
   "docs/08-devops.md"
   "docs/09-runbook.md"
+  "docs/10-uso-ia.md"
+  "docs/11-checklist-entrega.md"
+  "docs/12-diagrama-arquitectura.md"
   "docs/decisiones/README.md"
 )
 
