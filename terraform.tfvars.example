@@ -3,5 +3,7 @@ project_name = "obligatorio-isc"
 environment  = "academy"
 
 db_name     = "obligatorio"
-db_username = "admin_obligatorio"
+db_username = "adminisc"
 db_password = "CAMBIAR_EN_TERRAFORM_TFVARS_NO_SUBIR"
+
+db_multi_az = false

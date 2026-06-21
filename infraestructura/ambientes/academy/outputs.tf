@@ -22,3 +22,18 @@ output "nat_gateway_id" {
   description = "ID del NAT Gateway."
   value       = module.red.nat_gateway_id
 }
+
+output "db_endpoint" {
+  description = "Endpoint privado de RDS."
+  value       = module.rds.db_endpoint
+}
+
+output "db_port" {
+  description = "Puerto de RDS."
+  value       = module.rds.db_port
+}
+
+output "db_security_group_id" {
+  description = "Security Group asociado a RDS."
+  value       = module.rds.db_security_group_id
+}
