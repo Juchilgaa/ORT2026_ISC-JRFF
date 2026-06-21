@@ -52,3 +52,13 @@ output "eks_node_group_name" {
   description = "Nombre del node group de EKS."
   value       = module.eks.node_group_name
 }
+
+output "app_log_group_name" {
+  description = "Log group de CloudWatch para la aplicación."
+  value       = module.monitoreo.app_log_group_name
+}
+
+output "eks_log_group_name" {
+  description = "Log group de CloudWatch para EKS."
+  value       = module.monitoreo.eks_log_group_name
+}

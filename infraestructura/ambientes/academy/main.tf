@@ -48,3 +48,14 @@ module "eks" {
   node_min_size       = var.eks_node_min_size
   node_max_size       = var.eks_node_max_size
 }
+
+module "monitoreo" {
+  source = "../../modulos/monitoreo"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  log_retention_days = var.log_retention_days
+}
+
+
+
