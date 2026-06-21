@@ -1,0 +1,75 @@
+name: Validaciones
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  validar-repositorio:
+    name: Validar repositorio
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Validar estructura y secretos
+        run: ./scripts/validar-estructura.sh
+
+  validar-terraform:
+    name: Validar Terraform
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infraestructura/ambientes/academy
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init sin backend
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+  validar-node-docker:
+    name: Validar Node.js y Docker
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: aplicacion/nodejs-app
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: aplicacion/nodejs-app/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Validar sintaxis de server.js
+        run: node -c server.js
+
+      - name: Construir imagen Docker
+        run: docker build -t nodejs-obligatorio:ci .
