@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodejs-app-config
+  namespace: obligatorio-isc
+data:
+  APP_PORT: "3000"
+  DB_NAME: "obligatorio"
+  DB_HOST: "REEMPLAZAR_ENDPOINT_RDS"

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: obligatorio-isc
+  labels:
+    app.kubernetes.io/name: obligatorio-isc
+    app.kubernetes.io/part-of: obligatorio-cloud
