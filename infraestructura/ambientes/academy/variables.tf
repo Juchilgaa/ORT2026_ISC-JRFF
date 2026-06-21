@@ -75,3 +75,33 @@ variable "db_multi_az" {
   type        = bool
   default     = false
 }
+
+variable "kubernetes_version" {
+  description = "Versión de Kubernetes para EKS."
+  type        = string
+  default     = "1.30"
+}
+
+variable "eks_node_instance_types" {
+  description = "Tipos de instancia para el node group de EKS."
+  type        = list(string)
+  default     = ["t3.small"]
+}
+
+variable "eks_node_desired_size" {
+  description = "Cantidad deseada de nodos EKS."
+  type        = number
+  default     = 2
+}
+
+variable "eks_node_min_size" {
+  description = "Cantidad mínima de nodos EKS."
+  type        = number
+  default     = 1
+}
+
+variable "eks_node_max_size" {
+  description = "Cantidad máxima de nodos EKS."
+  type        = number
+  default     = 3
+}

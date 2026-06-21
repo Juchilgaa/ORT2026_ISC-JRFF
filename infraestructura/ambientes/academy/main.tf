@@ -1,3 +1,9 @@
+data "aws_caller_identity" "current" {}
+
+locals {
+  lab_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
+}
+
 module "red" {
   source = "../../modulos/red"
 
@@ -9,6 +15,7 @@ module "red" {
   private_app_subnet_cidrs = var.private_app_subnet_cidrs
   private_db_subnet_cidrs  = var.private_db_subnet_cidrs
 }
+
 module "rds" {
   source = "../../modulos/rds"
 
@@ -25,4 +32,19 @@ module "rds" {
   multi_az          = var.db_multi_az
 }
 
+module "eks" {
+  source = "../../modulos/eks"
 
+  project_name           = var.project_name
+  environment            = var.environment
+  private_app_subnet_ids = module.red.private_app_subnet_ids
+
+  cluster_role_arn = local.lab_role_arn
+  node_role_arn    = local.lab_role_arn
+
+  kubernetes_version  = var.kubernetes_version
+  node_instance_types = var.eks_node_instance_types
+  node_desired_size   = var.eks_node_desired_size
+  node_min_size       = var.eks_node_min_size
+  node_max_size       = var.eks_node_max_size
+}
