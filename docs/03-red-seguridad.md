@@ -1,3 +1,8 @@
 # 03 - Red y seguridad
 
-Pendiente de completar.
+## Región
+
+La región definida para el ambiente `academy` es:
+
+```text
+us-east-1
