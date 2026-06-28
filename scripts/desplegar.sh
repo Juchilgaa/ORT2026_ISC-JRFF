@@ -91,7 +91,7 @@ echo "======================================"
 echo "4 - Leyendo datos generados por Terraform"
 echo "======================================"
 
-CLUSTER_NAME="$(terraform -chdir="$TF_DIR" output -raw cluster_name)"
+CLUSTER_NAME="$(terraform -chdir="$TF_DIR" output -raw eks_cluster_name)"
 ECR_URL="$(terraform -chdir="$TF_DIR" output -raw ecr_repository_url)"
 DB_ENDPOINT="$(terraform -chdir="$TF_DIR" output -raw db_endpoint)"
 DB_HOST="$(echo "$DB_ENDPOINT" | cut -d ':' -f 1)"
@@ -159,7 +159,7 @@ echo "======================================"
 
 kubectl apply -f "$TMP_DIR/namespace/namespace.yaml"
 
-kubectl create secret generic nodejs-secret \
+kubectl create secret generic nodejs-app-secret \
   -n "$NAMESPACE" \
   --from-literal=DB_USER="$DB_USER" \
   --from-literal=DB_PASSWORD="$DB_PASSWORD" \
