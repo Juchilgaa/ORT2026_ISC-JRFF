@@ -62,3 +62,13 @@ output "eks_log_group_name" {
   description = "Log group de CloudWatch para EKS."
   value       = module.monitoreo.eks_log_group_name
 }
+
+output "ecr_repository_name" {
+  description = "Nombre del repositorio ECR de la aplicacion"
+  value       = module.ecr.repository_name
+}
+
+output "ecr_repository_url" {
+  description = "URL del repositorio ECR de la aplicacion"
+  value       = module.ecr.repository_url
+}
