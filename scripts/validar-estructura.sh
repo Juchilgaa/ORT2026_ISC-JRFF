@@ -13,6 +13,7 @@ required_dirs=(
   "infraestructura/modulos/rds"
   "infraestructura/modulos/eks"
   "infraestructura/modulos/monitoreo"
+  "infraestructura/modulos/ecr"
   "kubernetes/namespace"
   "kubernetes/config"
   "kubernetes/app"
@@ -25,6 +26,7 @@ required_files=(
   "README.md"
   ".gitignore"
   "terraform.tfvars.example"
+  ".github/workflows/validaciones.yml"
 
   "aplicacion/nodejs-app/package.json"
   "aplicacion/nodejs-app/package-lock.json"
@@ -43,15 +45,22 @@ required_files=(
   "infraestructura/modulos/red/main.tf"
   "infraestructura/modulos/red/variables.tf"
   "infraestructura/modulos/red/outputs.tf"
+
   "infraestructura/modulos/rds/main.tf"
   "infraestructura/modulos/rds/variables.tf"
   "infraestructura/modulos/rds/outputs.tf"
+
   "infraestructura/modulos/eks/main.tf"
   "infraestructura/modulos/eks/variables.tf"
   "infraestructura/modulos/eks/outputs.tf"
+
   "infraestructura/modulos/monitoreo/main.tf"
   "infraestructura/modulos/monitoreo/variables.tf"
   "infraestructura/modulos/monitoreo/outputs.tf"
+
+  "infraestructura/modulos/ecr/main.tf"
+  "infraestructura/modulos/ecr/variables.tf"
+  "infraestructura/modulos/ecr/outputs.tf"
 
   "kubernetes/namespace/namespace.yaml"
   "kubernetes/config/configmap.yaml"
@@ -60,6 +69,9 @@ required_files=(
   "kubernetes/app/service.yaml"
   "kubernetes/app/ingress.yaml"
   "kubernetes/app/hpa.yaml"
+
+  "scripts/validar-estructura.sh"
+  "scripts/desplegar.sh"
 
   "docs/01-alcance.md"
   "docs/02-arquitectura.md"
@@ -78,21 +90,23 @@ required_files=(
 
 for dir in "${required_dirs[@]}"; do
   if [ ! -d "$dir" ]; then
-    echo "ERROR: falta el directorio $dir"
+    echo "ERROR: falta directorio $dir"
     exit 1
   fi
 done
 
 for file in "${required_files[@]}"; do
   if [ ! -f "$file" ]; then
-    echo "ERROR: falta el archivo $file"
+    echo "ERROR: falta archivo $file"
     exit 1
   fi
 done
 
-if git ls-files | grep -E '(^|/)\.env$|(^|/)terraform\.tfvars$|\.pem$|\.key$|(^|/)kubeconfig$|\.kubeconfig$|(^|/)secret\.yaml$' >/dev/null; then
-  echo "ERROR: hay archivos sensibles trackeados"
-  git ls-files | grep -E '(^|/)\.env$|(^|/)terraform\.tfvars$|\.pem$|\.key$|(^|/)kubeconfig$|\.kubeconfig$|(^|/)secret\.yaml$'
+sensitive_files="$(git ls-files | grep -E '(^|/)\.env$|(^|/)terraform\.tfvars$|(^|/)secret\.yaml$|(^|/)kubeconfig$|\.kubeconfig$|\.pem$|\.key$' || true)"
+
+if [ -n "$sensitive_files" ]; then
+  echo "ERROR: se encontraron archivos sensibles versionados:"
+  echo "$sensitive_files"
   exit 1
 fi
 
