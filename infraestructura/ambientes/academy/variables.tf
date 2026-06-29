@@ -73,7 +73,7 @@ variable "db_instance_class" {
 variable "db_multi_az" {
   description = "Indica si RDS se despliega en modo Multi-AZ."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "kubernetes_version" {
