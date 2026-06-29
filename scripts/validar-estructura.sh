@@ -110,4 +110,26 @@ if [ -n "$sensitive_files" ]; then
   exit 1
 fi
 
+generated_files="$(git ls-files | grep -E '(^evidencias/|\.bak$|\.bkp$|\.bkp\.sh$|~$)' || true)"
+
+if [ -n "$generated_files" ]; then
+  echo "ERROR: se encontraron archivos temporales o de evidencia versionados:"
+  echo "$generated_files"
+  exit 1
+fi
+
+for script in scripts/validar-estructura.sh scripts/desplegar.sh; do
+  if ! bash -n "$script"; then
+    echo "ERROR: el script $script tiene errores de sintaxis"
+    exit 1
+  fi
+done
+
+if [ ! -x "scripts/desplegar.sh" ]; then
+  echo "ERROR: scripts/desplegar.sh no tiene permisos de ejecución"
+  echo "Solución:"
+  echo "  chmod +x scripts/desplegar.sh"
+  exit 1
+fi
+
 echo "OK: estructura válida"
