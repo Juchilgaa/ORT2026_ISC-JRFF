@@ -4,13 +4,13 @@ Repositorio del obligatorio de la materia **Implementación de Soluciones Cloud*
 
 ## Objetivo
 
-Implementar una solución cloud en AWS para una aplicación Node.js con base de datos MySQL, utilizando infraestructura como código, contenedores, Kubernetes y buenas prácticas DevOps.
+Implementar una solución cloud en AWS para una aplicación Node.js con base de datos MySQL, usando infraestructura como código, contenedores, Kubernetes y automatización de despliegue.
 
-La solución busca ser reproducible y validable mediante comandos. Para esto usamos Terraform, Docker, Amazon ECR, Amazon EKS, Amazon RDS MySQL y un Application Load Balancer público.
+La aplicación no cuenta con frontend gráfico, por lo que se valida mediante endpoints HTTP expuestos públicamente por un Application Load Balancer.
 
 ---
 
-## Arquitectura resumida
+## Arquitectura
 
 ```text
 Internet
@@ -21,84 +21,56 @@ Internet
   -> Amazon RDS MySQL privado
 ```
 
-La aplicación no tiene frontend gráfico, por lo que se valida mediante endpoints HTTP expuestos por el ALB.
+```mermaid
+flowchart LR
+    U[Usuario / curl] --> ALB[Application Load Balancer]
+    ALB --> ING[Ingress Kubernetes]
+    ING --> SVC[Service ClusterIP]
+    SVC --> POD[Pods Node.js]
+    POD --> RDS[(Amazon RDS MySQL privado)]
 
----
-
-## Tecnologías principales
-
-* AWS Academy Learner Lab
-* Terraform
-* Docker
-* Kubernetes / Amazon EKS
-* Amazon ECR
-* Amazon RDS MySQL
-* Application Load Balancer
-* AWS Load Balancer Controller
-* CloudWatch Logs
-* GitHub Actions
-* Bash scripts
-
----
-
-## Estructura del repositorio
-
-```text
-aplicacion/        Código fuente y Dockerfile de la aplicación
-infraestructura/   Terraform para AWS
-kubernetes/        Manifiestos Kubernetes
-docs/              Documentación técnica
-scripts/           Scripts de despliegue y validación
-.github/           Workflows de CI
+    DEV[Desarrollador] --> SCRIPT[scripts/desplegar.sh]
+    SCRIPT --> TF[Terraform]
+    SCRIPT --> ECR[Amazon ECR]
+    SCRIPT --> EKS[Amazon EKS]
 ```
 
 ---
 
-## Instalación de dependencias
+## Componentes principales
 
-Se requiere un entorno Linux o WSL con:
-
-* Git
-* AWS CLI
-* Terraform
-* Docker
-* kubectl
-* Helm
-* jq
-* curl
-
-Dependencias base en Ubuntu/WSL:
-
-```bash
-sudo apt update
-sudo apt install -y git curl unzip jq docker.io
-sudo usermod -aG docker $USER
-```
-
-Luego cerrar y abrir nuevamente la terminal para que tome el grupo `docker`.
-
-Instalar Helm:
-
-```bash
-sudo snap install helm --classic
-```
-
-Validar herramientas:
-
-```bash
-aws sts get-caller-identity
-terraform version
-docker version
-kubectl version --client
-helm version
-jq --version
-```
+* **Terraform**: define y crea la infraestructura en AWS.
+* **Docker**: empaqueta la aplicación Node.js en una imagen.
+* **Amazon ECR**: almacena la imagen Docker de la aplicación.
+* **Amazon EKS**: ejecuta la aplicación en Kubernetes.
+* **Amazon RDS MySQL**: base de datos administrada en subredes privadas.
+* **RDS Multi-AZ**: mejora la disponibilidad ante fallos de zona.
+* **Backups automáticos de RDS**: permiten recuperación ante fallos o pérdida de datos.
+* **Application Load Balancer**: expone la aplicación hacia Internet.
+* **AWS Load Balancer Controller**: crea y administra el ALB desde Kubernetes.
+* **CloudWatch Logs**: centraliza logs para monitoreo básico.
+* **GitHub Actions**: ejecuta validaciones del repositorio.
 
 ---
 
-## Variables necesarias
+## Dependencias necesarias
 
-La contraseña de la base de datos no se guarda en el repositorio. Se debe definir antes del despliegue:
+* **AWS CLI**: autenticación y operación contra AWS Academy.
+* **Terraform**: creación de infraestructura como código.
+* **Docker**: construcción de la imagen de la aplicación.
+* **kubectl**: administración del cluster EKS.
+* **Helm**: instalación del AWS Load Balancer Controller.
+* **jq**: lectura de outputs JSON usados por los scripts.
+* **curl**: prueba de endpoints HTTP.
+* **Git**: control de versiones y trabajo colaborativo.
+
+---
+
+## Variables requeridas
+
+La contraseña de la base de datos no se versiona en el repositorio.
+
+Antes de desplegar:
 
 ```bash
 export DB_PASSWORD='password_de_la_base'
@@ -114,164 +86,89 @@ export DB_NAME='obligatorio'
 
 ---
 
-## Despliegue automatizado
-
-El despliegue se ejecuta con:
-
-```bash
-./scripts/desplegar.sh
-```
-
-El script realiza las siguientes tareas:
-
-1. Valida la estructura del repositorio.
-2. Ejecuta Terraform.
-3. Construye la imagen Docker.
-4. Sube la imagen a Amazon ECR.
-5. Configura acceso a Amazon EKS.
-6. Instala/actualiza AWS Load Balancer Controller.
-7. Aplica los manifiestos Kubernetes.
-8. Importa el schema de la base de datos.
-9. Espera el ALB público.
-10. Prueba endpoints.
-11. Opcionalmente carga datos de prueba.
-12. Genera evidencia del despliegue.
+## Despliegue
 
 Despliegue completo con datos de prueba:
 
 ```bash
-export DB_PASSWORD='password_de_la_base'
 ./scripts/desplegar.sh --cargar-datos
 ```
 
-Solo cargar datos, sin volver a desplegar infraestructura:
+Solo cargar datos de prueba sobre una infraestructura ya desplegada:
 
 ```bash
-export DB_PASSWORD='password_de_la_base'
 ./scripts/desplegar.sh --solo-cargar-datos
 ```
 
+El script automatiza Terraform, Docker, ECR, EKS, Kubernetes, AWS Load Balancer Controller, carga de datos, validación de endpoints y generación de evidencia.
+
 ---
 
-## Pruebas de la aplicación
+## Qué deberías ver al finalizar
 
-Obtener el endpoint público del ALB:
+Al terminar correctamente el despliegue se debería obtener:
 
-```bash
-export ALB_HOST="$(kubectl get ingress nodejs-app-ingress -n obligatorio-isc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
-echo "$ALB_HOST"
-```
+* Terraform aplicado sin errores.
+* Imagen Docker publicada en Amazon ECR.
+* Cluster EKS accesible.
+* Nodos Kubernetes en estado `Ready`.
+* Pods `nodejs-app` en estado `Running`.
+* Service `nodejs-app-service` de tipo `ClusterIP`.
+* Ingress con dirección pública de ALB.
+* Endpoint `/health` respondiendo correctamente.
+* Endpoints funcionales devolviendo datos en formato JSON.
+* Evidencia generada en `evidencias/evidencia-despliegue-aws.txt`.
 
-Validar healthcheck:
-
-```bash
-curl "http://$ALB_HOST/health"
-```
-
-Resultado esperado:
+Respuesta esperada del healthcheck:
 
 ```json
 {"status":"ok","service":"nodejs-obligatorio"}
 ```
 
-Validar endpoints funcionales:
+Endpoints de prueba:
 
 ```bash
+curl "http://$ALB_HOST/health"
 curl "http://$ALB_HOST/catalog"
 curl "http://$ALB_HOST/inventory"
 curl "http://$ALB_HOST/customer/1"
 curl "http://$ALB_HOST/cart/1"
 ```
 
-Estos endpoints validan que la app responde por Internet, ingresa por el ALB, pasa por Ingress/Service, llega a los pods y consulta datos desde RDS.
-
 ---
 
-## Diagrama de arquitectura
+## Validaciones útiles
 
-```mermaid
-flowchart LR
-    U[Usuario / curl / Navegador] --> ALB[Application Load Balancer público]
-    ALB --> ING[Ingress Kubernetes]
-    ING --> SVC[Service ClusterIP]
-    SVC --> POD1[Pod Node.js]
-    SVC --> POD2[Pod Node.js]
+Validar estructura del repositorio:
 
-    POD1 --> RDS[(Amazon RDS MySQL privado)]
-    POD2 --> RDS
-
-    DEV[Desarrollador] --> SCRIPT[scripts/desplegar.sh]
-    SCRIPT --> TF[Terraform]
-    SCRIPT --> ECR[Amazon ECR]
-    SCRIPT --> EKS[Amazon EKS]
-
-    TF --> VPC[VPC / Subredes / NAT / Security Groups]
-    TF --> RDS
-    TF --> ECR
-    TF --> EKS
-
-    ECR --> POD1
-    ECR --> POD2
+```bash
+./scripts/validar-estructura.sh
 ```
 
----
-
-## Validaciones para defensa
-
-### 1. Terraform
+Validar Terraform:
 
 ```bash
 terraform -chdir=infraestructura/ambientes/academy validate
 terraform -chdir=infraestructura/ambientes/academy output
 ```
 
-Valida que la infraestructura esté definida como código y que existan outputs de VPC, subredes, EKS, RDS y ECR.
-
-### 2. EKS
+Validar Kubernetes:
 
 ```bash
 kubectl get nodes
 kubectl get pods -n obligatorio-isc -o wide
-```
-
-Valida que el cluster esté operativo y que los pods estén corriendo.
-
-### 3. Service e Ingress
-
-```bash
 kubectl get svc -n obligatorio-isc
 kubectl get ingress -n obligatorio-isc
-kubectl describe ingress nodejs-app-ingress -n obligatorio-isc
 ```
 
-Valida que el Service sea interno y que la exposición pública sea mediante ALB.
-
-### 4. Aplicación pública
+Validar RDS Multi-AZ y backups:
 
 ```bash
-curl "http://$ALB_HOST/health"
+aws rds describe-db-instances \
+  --region us-east-1 \
+  --query "DBInstances[*].[DBInstanceIdentifier,MultiAZ,BackupRetentionPeriod,PreferredBackupWindow]" \
+  --output table
 ```
-
-Valida el recorrido completo: Internet -> ALB -> Ingress -> Service -> Pod.
-
-### 5. Datos desde RDS
-
-```bash
-curl "http://$ALB_HOST/catalog"
-curl "http://$ALB_HOST/inventory"
-curl "http://$ALB_HOST/customer/1"
-curl "http://$ALB_HOST/cart/1"
-```
-
-Valida que la aplicación consulte datos desde la base RDS.
-
-### 6. Evidencia generada
-
-```bash
-cat evidencias/evidencia-despliegue-aws.txt
-```
-
-El script genera evidencia con outputs de Terraform, estado de pods, Service, Ingress, ALB y respuestas de endpoints.
 
 ---
 
@@ -286,27 +183,27 @@ No se deben subir:
 * `secret.yaml`
 * kubeconfig
 * claves `.pem` o `.key`
-* evidencia con endpoints temporales si no es necesaria para la entrega
+* evidencias con endpoints temporales
 
 Buenas prácticas aplicadas:
 
-* La contraseña de la base se pasa por variable de entorno.
-* Kubernetes usa Secret para datos sensibles.
-* El Service de la app es interno.
-* RDS se ubica en subredes privadas.
-* El acceso público se concentra en el Application Load Balancer.
+* RDS en subredes privadas.
+* RDS con Multi-AZ.
+* RDS con backups automáticos.
+* Contraseña de base de datos por variable de entorno.
+* Secret de Kubernetes para credenciales.
+* Service interno de tipo `ClusterIP`.
+* Exposición pública solo mediante ALB.
 
 ---
 
 ## Limpieza de recursos
 
-Al finalizar la validación o defensa, se recomienda destruir los recursos para no consumir el laboratorio AWS Academy:
+Al finalizar la validación o defensa, destruir los recursos para evitar consumo del laboratorio:
 
 ```bash
 terraform -chdir=infraestructura/ambientes/academy destroy
 ```
-
-Antes de destruir, guardar capturas o evidencia del despliegue.
 
 ---
 
@@ -314,3 +211,4 @@ Antes de destruir, guardar capturas o evidencia del despliegue.
 
 * Fferreira
 * JRecalde
+
