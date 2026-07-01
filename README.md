@@ -53,60 +53,10 @@ docker ps
 
 ## Arquitectura de la solución
 
-```mermaid
-flowchart TB
-    USER[Usuario / Navegador / curl] --> ALB[Application Load Balancer público]
+```markdown id="qwrmqf"
+![Diagrama de Red e Infraestructura](docs/imagenes/diagrama_aws_obligatorio_v2.jpg)
 
-    subgraph AWS[AWS - us-east-1]
-        subgraph VPC[VPC obligatorio-isc - 10.0.0.0/16]
-
-            subgraph PUB[Subredes públicas]
-                ALB
-                NAT[NAT Gateway]
-                IGW[Internet Gateway]
-            end
-
-            subgraph APP[Subredes privadas de aplicación]
-                subgraph EKS[Amazon EKS]
-                    ING[Ingress]
-                    SVC[Service ClusterIP]
-                    POD1[Pod Node.js]
-                    POD2[Pod Node.js]
-                    HPA[HPA]
-                end
-            end
-
-            subgraph DB[Subredes privadas de base de datos]
-                RDS[(Amazon RDS MySQL)]
-                BKP[Backups automáticos]
-                MAZ[Multi-AZ]
-            end
-        end
-
-        ECR[Amazon ECR]
-        CW[CloudWatch Logs]
-    end
-
-    ALB --> ING
-    ING --> SVC
-    SVC --> POD1
-    SVC --> POD2
-    HPA -. escala .-> POD1
-    HPA -. escala .-> POD2
-
-    POD1 --> RDS
-    POD2 --> RDS
-    RDS --> BKP
-    RDS --> MAZ
-
-    ECR --> POD1
-    ECR --> POD2
-    POD1 --> CW
-    POD2 --> CW
-
-    IGW --> ALB
-    APP --> NAT
-```
+[Archivo editable del diagrama](docs/imagenes/diagrama_aws_obligatorio_v2.drawio)
 
 ### Flujo principal
 
