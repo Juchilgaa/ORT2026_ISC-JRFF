@@ -53,7 +53,6 @@ docker ps
 
 ## Arquitectura de la solución
 
-```markdown id="qwrmqf"
 ![Diagrama de Red e Infraestructura](docs/imagenes/diagrama_aws_obligatorio_v2.jpg)
 
 [Archivo editable del diagrama](docs/imagenes/diagrama_aws_obligatorio_v2.drawio)
