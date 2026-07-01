@@ -6,11 +6,109 @@ Repositorio del obligatorio de la materia **Implementación de Soluciones Cloud*
 
 Implementar una solución cloud en AWS para una aplicación Node.js con base de datos MySQL, usando infraestructura como código, contenedores, Kubernetes y automatización de despliegue.
 
-La aplicación no cuenta con frontend gráfico, por lo que se valida mediante endpoints HTTP expuestos públicamente por un Application Load Balancer.
+La aplicación elegida fue una API Node.js. No cuenta con frontend gráfico, por lo que se valida mediante endpoints HTTP expuestos públicamente por un Application Load Balancer.
 
 ---
 
-## Arquitectura
+## Dependencias y validaciones iniciales
+
+### Dependencias necesarias
+
+* **AWS CLI** - autenticación y operación contra AWS Academy.
+* **Terraform** - creación de infraestructura como código.
+* **Docker** - construcción de la imagen de la aplicación.
+* **kubectl** - administración del cluster EKS.
+* **Helm** - instalación del AWS Load Balancer Controller.
+* **jq** - lectura de outputs JSON usados por los scripts.
+* **curl** - prueba de endpoints HTTP.
+* **Git** - control de versiones y trabajo colaborativo.
+
+### Validaciones iniciales
+
+Validar estructura del repositorio:
+
+```bash
+./scripts/validar-estructura.sh
+```
+
+Validar credenciales AWS:
+
+```bash
+aws sts get-caller-identity
+```
+
+Validar Terraform:
+
+```bash
+terraform -chdir=infraestructura/ambientes/academy validate
+```
+
+Validar Docker:
+
+```bash
+docker ps
+```
+
+---
+
+## Arquitectura de la solución
+
+```mermaid
+flowchart TB
+    USER[Usuario / Navegador / curl] --> ALB[Application Load Balancer público]
+
+    subgraph AWS[AWS - us-east-1]
+        subgraph VPC[VPC obligatorio-isc - 10.0.0.0/16]
+
+            subgraph PUB[Subredes públicas]
+                ALB
+                NAT[NAT Gateway]
+                IGW[Internet Gateway]
+            end
+
+            subgraph APP[Subredes privadas de aplicación]
+                subgraph EKS[Amazon EKS]
+                    ING[Ingress]
+                    SVC[Service ClusterIP]
+                    POD1[Pod Node.js]
+                    POD2[Pod Node.js]
+                    HPA[HPA]
+                end
+            end
+
+            subgraph DB[Subredes privadas de base de datos]
+                RDS[(Amazon RDS MySQL)]
+                BKP[Backups automáticos]
+                MAZ[Multi-AZ]
+            end
+        end
+
+        ECR[Amazon ECR]
+        CW[CloudWatch Logs]
+    end
+
+    ALB --> ING
+    ING --> SVC
+    SVC --> POD1
+    SVC --> POD2
+    HPA -. escala .-> POD1
+    HPA -. escala .-> POD2
+
+    POD1 --> RDS
+    POD2 --> RDS
+    RDS --> BKP
+    RDS --> MAZ
+
+    ECR --> POD1
+    ECR --> POD2
+    POD1 --> CW
+    POD2 --> CW
+
+    IGW --> ALB
+    APP --> NAT
+```
+
+### Flujo principal
 
 ```text
 Internet
@@ -21,52 +119,57 @@ Internet
   -> Amazon RDS MySQL privado
 ```
 
-```mermaid
-flowchart LR
-    U[Usuario / curl] --> ALB[Application Load Balancer]
-    ALB --> ING[Ingress Kubernetes]
-    ING --> SVC[Service ClusterIP]
-    SVC --> POD[Pods Node.js]
-    POD --> RDS[(Amazon RDS MySQL privado)]
-
-    DEV[Desarrollador] --> SCRIPT[scripts/desplegar.sh]
-    SCRIPT --> TF[Terraform]
-    SCRIPT --> ECR[Amazon ECR]
-    SCRIPT --> EKS[Amazon EKS]
-```
-
 ---
 
 ## Componentes principales
 
-* **Terraform**: define y crea la infraestructura en AWS.
-* **Docker**: empaqueta la aplicación Node.js en una imagen.
-* **Amazon ECR**: almacena la imagen Docker de la aplicación.
-* **Amazon EKS**: ejecuta la aplicación en Kubernetes.
-* **Amazon RDS MySQL**: base de datos administrada en subredes privadas.
-* **RDS Multi-AZ**: mejora la disponibilidad ante fallos de zona.
-* **Backups automáticos de RDS**: permiten recuperación ante fallos o pérdida de datos.
-* **Application Load Balancer**: expone la aplicación hacia Internet.
-* **AWS Load Balancer Controller**: crea y administra el ALB desde Kubernetes.
-* **CloudWatch Logs**: centraliza logs para monitoreo básico.
-* **GitHub Actions**: ejecuta validaciones del repositorio.
+* **Application Load Balancer** - expone la aplicación hacia Internet.
+* **Amazon EKS** - ejecuta la aplicación en Kubernetes.
+* **Pods Node.js** - reemplazan a los servidores de aplicación tradicionales.
+* **Service ClusterIP** - expone la aplicación internamente dentro del cluster.
+* **Ingress** - define la entrada HTTP hacia la aplicación.
+* **AWS Load Balancer Controller** - crea y administra el ALB desde Kubernetes.
+* **Amazon RDS MySQL** - base de datos administrada en subredes privadas.
+* **RDS Multi-AZ** - mejora la disponibilidad ante fallos de zona.
+* **Backups automáticos de RDS** - permiten recuperación ante fallos o pérdida de datos.
+* **Amazon ECR** - almacena la imagen Docker de la aplicación.
+* **CloudWatch Logs** - centraliza logs para monitoreo básico.
+* **Terraform** - define la infraestructura cloud.
+* **GitHub Actions** - ejecuta validaciones del repositorio.
 
 ---
 
-## Dependencias necesarias
+## Equivalencia con la arquitectura solicitada
 
-* **AWS CLI**: autenticación y operación contra AWS Academy.
-* **Terraform**: creación de infraestructura como código.
-* **Docker**: construcción de la imagen de la aplicación.
-* **kubectl**: administración del cluster EKS.
-* **Helm**: instalación del AWS Load Balancer Controller.
-* **jq**: lectura de outputs JSON usados por los scripts.
-* **curl**: prueba de endpoints HTTP.
-* **Git**: control de versiones y trabajo colaborativo.
+| Componente solicitado      | Implementación en AWS                            |
+| -------------------------- | ------------------------------------------------ |
+| Load balancer              | Application Load Balancer                        |
+| Servidores de aplicación   | Pods Node.js en Amazon EKS                       |
+| Base de datos              | Amazon RDS MySQL privado                         |
+| Solución de respaldos      | Backups automáticos de RDS                       |
+| Tolerancia a fallas        | Multi-AZ, subredes en distintas AZ y EKS         |
+| Soporte a picos de tráfico | Réplicas, HPA y ALB                              |
+| Firewall restringido       | Security Groups y recursos privados              |
+| Mejora implementada        | CloudWatch Logs, automatización y GitHub Actions |
 
 ---
 
-## Variables requeridas
+## Datos principales de infraestructura
+
+* **Región AWS**: `us-east-1`
+* **VPC**: `10.0.0.0/16`
+* **Subredes públicas**: `10.0.1.0/24`, `10.0.2.0/24`
+* **Subredes privadas aplicación**: `10.0.11.0/24`, `10.0.12.0/24`
+* **Subredes privadas base de datos**: `10.0.21.0/24`, `10.0.22.0/24`
+* **EKS node group**: mínimo 1, deseado 2, máximo 3 nodos
+* **RDS**: MySQL privado, Multi-AZ y backups automáticos
+* **Logs**: retención de 7 días en CloudWatch
+
+---
+
+## Despliegue
+
+### Variables requeridas
 
 La contraseña de la base de datos no se versiona en el repositorio.
 
@@ -86,25 +189,47 @@ export DB_NAME='obligatorio'
 
 ---
 
-## Despliegue
-
-Despliegue completo con datos de prueba:
+### Despliegue completo con datos de prueba
 
 ```bash
 ./scripts/desplegar.sh --cargar-datos
 ```
 
-Solo cargar datos de prueba sobre una infraestructura ya desplegada:
+Ejecuta Terraform, construye la imagen Docker, la publica en ECR, configura EKS, aplica Kubernetes, importa el schema, carga datos de prueba y valida endpoints.
+
+---
+
+### Despliegue sin cargar datos
+
+```bash
+./scripts/desplegar.sh --no-cargar-datos
+```
+
+Despliega infraestructura y aplicación sin insertar datos de prueba.
+
+---
+
+### Solo cargar datos de prueba
 
 ```bash
 ./scripts/desplegar.sh --solo-cargar-datos
 ```
 
-El script automatiza Terraform, Docker, ECR, EKS, Kubernetes, AWS Load Balancer Controller, carga de datos, validación de endpoints y generación de evidencia.
+Se usa cuando la infraestructura ya está creada y solo se quiere volver a importar el schema/cargar datos para validar la aplicación.
 
 ---
 
-## Qué deberías ver al finalizar
+### Despliegue sin confirmación manual
+
+```bash
+./scripts/desplegar.sh --cargar-datos --auto-approve
+```
+
+Ejecuta el despliegue completo sin pedir confirmación de Terraform.
+
+---
+
+## Resultado esperado al finalizar
 
 Al terminar correctamente el despliegue se debería obtener:
 
@@ -128,6 +253,8 @@ Respuesta esperada del healthcheck:
 Endpoints de prueba:
 
 ```bash
+export ALB_HOST="$(kubectl get ingress nodejs-app-ingress -n obligatorio-isc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+
 curl "http://$ALB_HOST/health"
 curl "http://$ALB_HOST/catalog"
 curl "http://$ALB_HOST/inventory"
@@ -137,20 +264,7 @@ curl "http://$ALB_HOST/cart/1"
 
 ---
 
-## Validaciones útiles
-
-Validar estructura del repositorio:
-
-```bash
-./scripts/validar-estructura.sh
-```
-
-Validar Terraform:
-
-```bash
-terraform -chdir=infraestructura/ambientes/academy validate
-terraform -chdir=infraestructura/ambientes/academy output
-```
+## Validaciones posteriores
 
 Validar Kubernetes:
 
@@ -161,6 +275,12 @@ kubectl get svc -n obligatorio-isc
 kubectl get ingress -n obligatorio-isc
 ```
 
+Validar logs:
+
+```bash
+kubectl logs -n obligatorio-isc deploy/nodejs-app
+```
+
 Validar RDS Multi-AZ y backups:
 
 ```bash
@@ -168,6 +288,12 @@ aws rds describe-db-instances \
   --region us-east-1 \
   --query "DBInstances[*].[DBInstanceIdentifier,MultiAZ,BackupRetentionPeriod,PreferredBackupWindow]" \
   --output table
+```
+
+Ver evidencia generada:
+
+```bash
+cat evidencias/evidencia-despliegue-aws.txt
 ```
 
 ---
@@ -194,6 +320,7 @@ Buenas prácticas aplicadas:
 * Secret de Kubernetes para credenciales.
 * Service interno de tipo `ClusterIP`.
 * Exposición pública solo mediante ALB.
+* Security Groups restringidos a los accesos necesarios.
 
 ---
 
@@ -209,6 +336,5 @@ terraform -chdir=infraestructura/ambientes/academy destroy
 
 ## Integrantes
 
-* Fferreira
-* JRecalde
-
+* Fferreira - 187374
+* JRecalde - 334170
